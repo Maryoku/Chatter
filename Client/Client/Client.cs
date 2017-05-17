@@ -3,18 +3,26 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace Client
 {
     class Client
     {
-        public static TcpClient client; //??
+        public static TcpClient client;
         const int port = 90;
+        public string UserName;
 
-        public Client()
+        public delegate void MessageEvent(string msg);
+        public static event MessageEvent MessageReceived;
+
+        public Client(string IP, string UserName)
         {
             client = new TcpClient();
-            client.Connect(IPAddress.Parse("192.168.1.7"), port);
+            this.UserName = UserName;
+            client.Connect(IPAddress.Parse(IP), port);
             Thread clientListener = new Thread(RecvMessage);
             clientListener.IsBackground = true;
             clientListener.Start();
@@ -44,7 +52,7 @@ namespace Client
                 if (buffer.Count > 0)
                 {
                     string msg = Encoding.ASCII.GetString(buffer.ToArray());
-                    Chatty.Get_NewMsg(msg);
+                    MessageReceived(msg);
                 }
             }
         }
